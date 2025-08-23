@@ -1,12 +1,24 @@
 import React, { useState } from "react";
+import React from 'react';
+import { useAuth } from './hooks/useAuth';
+import LoginScreen from './components/LoginScreen';
 
 const App = () => {
-  const [currentView, setCurrentView] = useState("login");
-  const [userType, setUserType] = useState(null);
-  const [loginData, setLoginData] = useState({
-    id: "",
-    password: ""
-  });
+  const { user, loading } = useAuth();
+
+  if (loading) return <div>Loading...</div>;
+
+  return (
+    <div>
+      {!user ? (
+        <LoginScreen />
+      ) : (
+        <div>Welcome back, {user.email}!</div>
+      )}
+    </div>
+  );
+};
+const App = () => {
   const [patientData, setPatientData] = useState({
     name: "",
     psychologistId: "",
