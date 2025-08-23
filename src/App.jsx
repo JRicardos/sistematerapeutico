@@ -3,6 +3,10 @@ import React, { useState } from "react";
 const App = () => {
   const [currentView, setCurrentView] = useState("login");
   const [userType, setUserType] = useState(null);
+  const [loginData, setLoginData] = useState({
+    id: "",
+    password: ""
+  });
   const [patientData, setPatientData] = useState({
     name: "",
     psychologistId: "",
@@ -52,9 +56,10 @@ const App = () => {
   const [newPractice, setNewPractice] = useState("");
   const [editingPatient, setEditingPatient] = useState(null);
   const [editedPatient, setEditedPatient] = useState({});
+  const [registrationStep, setRegistrationStep] = useState(1);
 
-  // Mobile Patient View Components
-  const MobileLogin = () => (
+  // Login Screen
+  const LoginScreen = () => (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
@@ -64,14 +69,64 @@ const App = () => {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-gray-800">Sistema Terapêutico</h1>
-          <p className="text-gray-600 mt-2">Paciente</p>
+          <p className="text-gray-600 mt-2">Acesse sua conta</p>
+        </div>
+
+        <div className="space-y-4 mb-6">
+          <button
+            onClick={() => {
+              setLoginData({...loginData, userType: "patient"});
+              setCurrentView("patientRegistration");
+            }}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-xl transition-colors duration-200 flex items-center justify-center space-x-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 11.246a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span>Entrar como Paciente</span>
+          </button>
+
+          <button
+            onClick={() => setCurrentView("psychologistLogin")}
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-xl transition-colors duration-200 flex items-center justify-center space-x-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            <span>Entrar como Psicólogo</span>
+          </button>
+        </div>
+
+        <div className="border-t pt-6">
+          <p className="text-sm text-gray-500 text-center">
+            Selecione o tipo de usuário para acessar o sistema
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Patient Registration Steps
+  const PatientRegistrationStep1 = () => (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+        <div className="flex items-center justify-between mb-6">
+          <button
+            onClick={() => setCurrentView("login")}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h1 className="text-xl font-bold text-gray-800">Cadastro Paciente</h1>
+          <div className="w-6"></div>
         </div>
 
         <form onSubmit={(e) => {
           e.preventDefault();
-          if (patientData.name && patientData.psychologistId && patientData.phone) {
-            setUserType("patient");
-            setCurrentView("mobileHome");
+          if (patientData.name && patientData.phone) {
+            setRegistrationStep(2);
           }
         }}>
           <div className="space-y-4">
@@ -83,18 +138,6 @@ const App = () => {
                 onChange={(e) => setPatientData({...patientData, name: e.target.value})}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="Seu nome completo"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">ID do Psicólogo</label>
-              <input
-                type="text"
-                value={patientData.psychologistId}
-                onChange={(e) => setPatientData({...patientData, psychologistId: e.target.value})}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="ID do seu psicólogo"
                 required
               />
             </div>
@@ -113,7 +156,122 @@ const App = () => {
 
             <button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 transform hover:scale-[1.02]"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
+            >
+              Continuar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
+  const PatientRegistrationStep2 = () => (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+        <div className="flex items-center justify-between mb-6">
+          <button
+            onClick={() => setRegistrationStep(1)}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h1 className="text-xl font-bold text-gray-800">Cadastro Paciente</h1>
+          <div className="w-6"></div>
+        </div>
+
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          if (patientData.psychologistId) {
+            setUserType("patient");
+            setCurrentView("mobileHome");
+          }
+        }}>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">ID do Psicólogo</label>
+              <input
+                type="text"
+                value={patientData.psychologistId}
+                onChange={(e) => setPatientData({...patientData, psychologistId: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                placeholder="ID do seu psicólogo"
+                required
+              />
+            </div>
+
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>Importante:</strong> Solicite o ID do seu psicólogo para completar o cadastro.
+              </p>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
+            >
+              Finalizar Cadastro
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
+  // Psychologist Login
+  const PsychologistLogin = () => (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+        <div className="flex items-center justify-between mb-6">
+          <button
+            onClick={() => setCurrentView("login")}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h1 className="text-xl font-bold text-gray-800">Login Psicólogo</h1>
+          <div className="w-6"></div>
+        </div>
+
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          if (loginData.id && loginData.password) {
+            setUserType("psychologist");
+            setCurrentView("webDashboard");
+          }
+        }}>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">ID do Psicólogo</label>
+              <input
+                type="text"
+                value={loginData.id}
+                onChange={(e) => setLoginData({...loginData, id: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                placeholder="Seu ID"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+              <input
+                type="password"
+                value={loginData.password}
+                onChange={(e) => setLoginData({...loginData, password: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                placeholder="Sua senha"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
             >
               Entrar
             </button>
@@ -121,12 +279,15 @@ const App = () => {
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-sm text-gray-500">Conecte-se ao seu terapeuta para acompanhar seu progresso</p>
+          <p className="text-sm text-gray-500">
+            Acesso exclusivo para profissionais credenciados
+          </p>
         </div>
       </div>
     </div>
   );
 
+  // Mobile Patient View Components
   const MobileHome = () => (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="bg-white min-h-screen">
@@ -142,7 +303,10 @@ const App = () => {
               <h1 className="text-xl font-bold text-gray-800">Sistema Terapêutico</h1>
             </div>
             <button
-              onClick={() => setCurrentView("mobileLogin")}
+              onClick={() => {
+                setUserType(null);
+                setCurrentView("login");
+              }}
               className="text-gray-500 hover:text-gray-700 transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -303,51 +467,6 @@ const App = () => {
   );
 
   // Web Psychologist View Components
-  const WebLogin = () => (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 11.246a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-800">Sistema Terapêutico</h1>
-          <p className="text-gray-600 mt-2">Psicólogo</p>
-        </div>
-
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          setUserType("psychologist");
-          setCurrentView("webDashboard");
-        }}>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">ID do Psicólogo</label>
-              <input
-                type="text"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="Seu ID"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
-            >
-              Entrar
-            </button>
-          </div>
-        </form>
-
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-500">Acompanhe seus pacientes e gerencie sua prática</p>
-        </div>
-      </div>
-    </div>
-  );
-
   const EditPatientModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl p-6 w-full max-w-md">
@@ -496,7 +615,10 @@ const App = () => {
             </div>
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => setCurrentView("webLogin")}
+                onClick={() => {
+                  setUserType(null);
+                  setCurrentView("login");
+                }}
                 className="text-gray-500 hover:text-gray-700 transition-colors"
               >
                 Sair
@@ -672,28 +794,21 @@ const App = () => {
   );
 
   const renderContent = () => {
-    if (userType === "patient") {
-      switch (currentView) {
-        case "mobileLogin":
-          return <MobileLogin />;
-        case "mobileHome":
-          return <MobileHome />;
-        case "dailyEntry":
-          return <DailyEntryForm />;
-        default:
-          return <MobileLogin />;
-      }
-    } else if (userType === "psychologist") {
-      switch (currentView) {
-        case "webLogin":
-          return <WebLogin />;
-        case "webDashboard":
-          return <WebDashboard />;
-        default:
-          return <WebLogin />;
-      }
-    } else {
-      return <WebLogin />;
+    switch (currentView) {
+      case "login":
+        return <LoginScreen />;
+      case "patientRegistration":
+        return registrationStep === 1 ? <PatientRegistrationStep1 /> : <PatientRegistrationStep2 />;
+      case "psychologistLogin":
+        return <PsychologistLogin />;
+      case "mobileHome":
+        return <MobileHome />;
+      case "dailyEntry":
+        return <DailyEntryForm />;
+      case "webDashboard":
+        return <WebDashboard />;
+      default:
+        return <LoginScreen />;
     }
   };
 
