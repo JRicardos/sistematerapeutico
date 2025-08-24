@@ -1,26 +1,25 @@
-import React, { useState } from "react";
-import React from 'react';
+import React, { useState, useEffect } from "react";
 import { useAuth } from './hooks/useAuth';
+import { api } from "./services/api";
 import LoginScreen from './components/LoginScreen';
+import PatientLogin from './components/Patient/Login';
+import PatientRegistrationStep1 from './components/Patient/RegistrationStep1';
+import PatientRegistrationStep2 from './components/Patient/RegistrationStep2';
+import PatientDashboard from './components/Patient/Dashboard';
+import PsychologistLogin from './components/Psychologist/Login';
+import PsychologistDashboard from './components/Psychologist/Dashboard';
 
 const App = () => {
-  const { user, loading } = useAuth();
-
-  if (loading) return <div>Loading...</div>;
-
-  return (
-    <div>
-      {!user ? (
-        <LoginScreen />
-      ) : (
-        <div>Welcome back, {user.email}!</div>
-      )}
-    </div>
-  );
-};
-const App = () => {
+  const { user, loading, signIn, signUp, signOut } = useAuth();
+  const [currentView, setCurrentView] = useState("login"); // login, patientRegistration, psychologistLogin, mobileHome, dailyEntry, webDashboard
+  const [userType, setUserType] = useState(null); // "patient" or "psychologist"
+  const [loginData, setLoginData] = useState({ 
+    email: "", 
+    password: ""
+  });
   const [patientData, setPatientData] = useState({
     name: "",
+    cpf: "",
     psychologistId: "",
     phone: "",
   });
@@ -70,6 +69,42 @@ const App = () => {
   const [editedPatient, setEditedPatient] = useState({});
   const [registrationStep, setRegistrationStep] = useState(1);
 
+  // Carregar dados quando usuário logar
+  useEffect(() => {
+    if (user) {
+      if (userType === "psychologist") {
+        setCurrentView("webDashboard");
+      } else {
+        setCurrentView("mobileHome");
+      }
+    }
+  }, [user, userType]);
+
+  // Se estiver carregando a autenticação
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Se usuário estiver autenticado, mostra o conteúdo principal
+  if (user) {
+    // Aqui você pode verificar o tipo de usuário e mostrar a interface apropriada
+    // Por enquanto, vamos manter a lógica existente
+    return renderContent();
+  }
+
+  // Se não estiver autenticado, mostra tela de login
+  return <LoginScreen />;
+
+  // ... resto do seu código existente ...
+
+  // Login Screen
   // Login Screen
   const LoginScreen = () => (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
