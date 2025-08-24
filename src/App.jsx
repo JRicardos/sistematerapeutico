@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from './hooks/useAuth';
 import { api } from "./services/api";
+import SignupScreen from './components/SignupScreen';
 import LoginScreen from './components/LoginScreen';
 import PatientLogin from './components/Patient/Login';
 import PatientRegistrationStep1 from './components/Patient/RegistrationStep1';
@@ -12,7 +13,7 @@ import DailyEntry from './components/Patient/DailyEntry';
 
 const App = () => {
   const { user, loading, signIn, signUp, signOut } = useAuth();
-  const [currentView, setCurrentView] = useState("login");
+  const [currentView, setCurrentView] = useState("signup"); // Começa com signup
   const [userType, setUserType] = useState(null);
   const [loginData, setLoginData] = useState({ 
     email: "", 
@@ -97,52 +98,22 @@ const App = () => {
   // Se usuário estiver autenticado, mostra o conteúdo principal
   if (user) {
     if (userType === "psychologist") {
-      switch (currentView) {
-        case "psychologistDashboard":
-          return (
-            <PsychologistDashboard 
-              onLogout={() => {
-                signOut();
-                setUserType(null);
-                setCurrentView("login");
-              }}
-              patients={patientsList}
-              practices={therapeuticPractices}
-              dashboardData={dashboardData}
-              on patientsList={setPatientsList}
-              onTherapeuticPractices={setTherapeuticPractices}
-            />
-          );
-        default:
-          return (
-            <PsychologistDashboard 
-              onLogout={() => {
-                signOut();
-                setUserType(null);
-                setCurrentView("login");
-              }}
-              patients={patientsList}
-              practices={therapeuticPractices}
-              dashboardData={dashboardData}
-              onPatientsList={setPatientsList}
-              onTherapeuticPractices={setTherapeuticPractices}
-            />
-          );
-      }
+      return (
+        <PsychologistDashboard 
+          onLogout={() => {
+            signOut();
+            setUserType(null);
+            setCurrentView("login");
+          }}
+          patients={patientsList}
+          practices={therapeuticPractices}
+          dashboardData={dashboardData}
+          onPatientsList={setPatientsList}
+          onTherapeuticPractices={setTherapeuticPractices}
+        />
+      );
     } else {
       switch (currentView) {
-        case "patientDashboard":
-          return (
-            <PatientDashboard 
-              onNavigate={setCurrentView}
-              onLogout={() => {
-                signOut();
-                setUserType(null);
-                setCurrentView("login");
-              }}
-              practices={therapeuticPractices}
-            />
-          );
         case "dailyEntry":
           return (
             <DailyEntry
@@ -176,7 +147,33 @@ const App = () => {
     }
   }
 
-  // Se não estiver autenticado, mostra tela de login
+  // Se não estiver autenticado, mostra telas de cadastro/login
+  const handleSignup = async (signupData) => {
+    try {
+      const result = await signUp(
+        signupData.email,
+        signupData.password,
+        {
+          name: signupData.name,
+          email: signupData.email,
+          ...(signupData.userType === "psychologist" 
+            ? { crp: signupData.crp }
+            : { cpf: signupData.cpf }
+          )
+        },
+        signupData.userType
+      );
+      
+      if (result?.data?.user) {
+        setUserType(signupData.userType);
+        setCurrentView("login");
+      }
+    } catch (error) {
+      console.error("Erro no cadastro:", error);
+      alert("Erro ao realizar cadastro. Tente novamente.");
+    }
+  };
+
   const handlePsychologistLogin = async (email, password) => {
     try {
       const result = await signIn(email, password);
@@ -186,32 +183,37 @@ const App = () => {
       }
     } catch (error) {
       console.error("Erro no login:", error);
+      alert("Erro ao fazer login. Verifique suas credenciais.");
     }
   };
 
-  const handlePatientRegistration = async (data) => {
+  const handlePatientLogin = async (email, password) => {
     try {
-      const result = await signUp(
-        `${data.cpf}@paciente.com`, // Email temporário
-        "senha123", // Senha padrão
-        data,
-        "patient"
-      );
+      const result = await signIn(email, password);
       if (result?.data?.user) {
         setUserType("patient");
         setCurrentView("patientDashboard");
       }
     } catch (error) {
-      console.error("Erro no registro:", error);
+      console.error("Erro no login:", error);
+      alert("Erro ao fazer login. Verifique suas credenciais.");
     }
   };
 
   switch (currentView) {
+    case "signup":
+      return <SignupScreen onNavigate={setCurrentView} onSignup={handleSignup} />;
+    
     case "login":
       return <LoginScreen onNavigate={setCurrentView} />;
     
     case "patientLogin":
-      return <PatientLogin onNavigate={setCurrentView} />;
+      return (
+        <PatientLogin 
+          onLogin={handlePatientLogin}
+          onBack={() => setCurrentView("login")}
+        />
+      );
     
     case "patientRegistration":
       return (
@@ -230,7 +232,11 @@ const App = () => {
           setPatientData={setPatientData}
           onNavigate={setCurrentView}
           onBack={() => setCurrentView("patientRegistration")}
-          onRegister={handlePatientRegistration}
+          onRegister={(data) => {
+            // Aqui você pode implementar o registro do paciente
+            console.log("Registrando paciente:", data);
+            setCurrentView("login");
+          }}
         />
       );
     
@@ -243,7 +249,7 @@ const App = () => {
       );
     
     default:
-      return <LoginScreen onNavigate={setCurrentView} />;
+      return <SignupScreen onNavigate={setCurrentView} onSignup={handleSignup} />;
   }
 };
 
