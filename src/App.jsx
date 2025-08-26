@@ -46,6 +46,8 @@ const App = () => {
 
   // Carregar dados do Supabase quando usuário logar
   useEffect(() => {
+    console.log('Supabase URL:', process.env.REACT_APP_SUPABASE_URL);
+    console.log('Supabase Key:', process.env.REACT_APP_SUPABASE_ANON_KEY);
     const loadData = async () => {
       if (user && userType === "psychologist") {
         try {
