@@ -123,7 +123,7 @@ const SignupScreen = ({ onNavigate, onSignup }) => {
                   value={signupData.email}
                   onChange={(e) => setSignupData({...signupData, email: e.target.value})}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="seu.email@exemplo.com"
+                  placeholder="email@exemplo.com"
                   required
                 />
               </div>
@@ -214,6 +214,7 @@ const SignupScreen = ({ onNavigate, onSignup }) => {
               )}
 
               <button
+                onClick={() => onNavigate("/src/components/LoginScreen.jsx")}
                 type="submit"
                 className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
               >
