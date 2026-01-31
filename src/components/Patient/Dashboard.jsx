@@ -1,15 +1,9 @@
 import React, { useState } from 'react';
 
-const PatientDashboard = ({ onNavigate, onLogout }) => {
+const PatientDashboard = ({ onNavigate, onLogout, practices = [] }) => {
   const [selectedPractice, setSelectedPractice] = useState("");
-
-  const therapeuticPractices = [
-    "Respiração profunda",
-    "Meditação guiada", 
-    "Gratidão diária",
-    "Exercícios de mindfulness",
-    "Jornal de gratidão"
-  ];
+  const therapeuticPractices = Array.isArray(practices) && practices.length > 0 ? practices : [];
+  const hasPractices = therapeuticPractices.length > 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -77,20 +71,26 @@ const PatientDashboard = ({ onNavigate, onLogout }) => {
               Práticas Terapêuticas
             </h3>
             <div className="space-y-3">
-              {therapeuticPractices.map((practice, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedPractice(practice)}
-                  className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-700">{practice}</span>
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </button>
-              ))}
+              {hasPractices ? (
+                therapeuticPractices.map((practice, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedPractice(practice)}
+                    className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-700">{practice}</span>
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <p className="text-gray-500 py-4 text-center">
+                  Nenhuma prática atribuída pelo seu psicólogo
+                </p>
+              )}
             </div>
           </div>
         </div>

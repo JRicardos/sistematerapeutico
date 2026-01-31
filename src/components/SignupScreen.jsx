@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 
 const SignupScreen = ({ onNavigate, onSignup }) => {
   const [userType, setUserType] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [signupData, setSignupData] = useState({
     name: "",
     email: "",
@@ -20,18 +22,25 @@ const SignupScreen = ({ onNavigate, onSignup }) => {
   const handleBasicSubmit = (e) => {
     e.preventDefault();
     if (signupData.password !== signupData.confirmPassword) {
-      alert("As senhas não coincidem!");
+      toast.error('As senhas não coincidem!');
       return;
     }
     setStep(3);
   };
 
-  const handleFinalSubmit = (e) => {
+  const handleFinalSubmit = async (e) => {
     e.preventDefault();
-    onSignup({
-      ...signupData,
-      userType
-    });
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
+    try {
+      await onSignup({
+        ...signupData,
+        userType
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (step === 1) {
@@ -214,11 +223,11 @@ const SignupScreen = ({ onNavigate, onSignup }) => {
               )}
 
               <button
-                onClick={() => onNavigate("/src/components/LoginScreen.jsx")}
                 type="submit"
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
+                disabled={isSubmitting}
+                className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
               >
-                Finalizar Cadastro
+                {isSubmitting ? 'Enviando...' : 'Finalizar Cadastro'}
               </button>
             </div>
           </form>

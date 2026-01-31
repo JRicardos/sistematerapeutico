@@ -1,54 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
-const PsychologistDashboard = ({ onLogout, onNavigate }) => {
-  const [patients, setPatients] = useState([]);
-  const [therapeuticPractices, setTherapeuticPractices] = useState([]);
+const PsychologistDashboard = ({
+  onLogout,
+  patients = [],
+  practices = [],
+  dashboardData = {},
+  onAddPractice,
+}) => {
   const [showAddPractice, setShowAddPractice] = useState(false);
-  const [newPractice, setNewPractice] = useState("");
+  const [newPractice, setNewPractice] = useState({ name: "", description: "" });
   const [editingPatient, setEditingPatient] = useState(null);
   const [editedPatient, setEditedPatient] = useState({});
 
-  // Mock data - substituir por dados reais do Supabase
-  useEffect(() => {
-    setPatients([
-      { 
-        id: 1, 
-        name: "Maria Silva", 
-        cpf: "123.456.789-00", 
-        contract: "Contrato 001",
-        practices: ["Respiração profunda", "Meditação guiada"]
-      },
-      { 
-        id: 2, 
-        name: "João Oliveira", 
-        cpf: "987.654.321-00", 
-        contract: "Contrato 002",
-        practices: ["Exercícios de mindfulness", "Jornal de gratidão"]
-      }
-    ]);
+  const displayPractices = Array.isArray(practices)
+    ? practices.map(p => (typeof p === 'object' && p?.name ? p.name : p))
+    : [];
 
-    setTherapeuticPractices([
-      "Respiração profunda",
-      "Meditação guiada",
-      "Gratidão diária",
-      "Exercícios de mindfulness",
-      "Jornal de gratidão"
-    ]);
-  }, []);
-
-  const dashboardData = {
-    totalPatients: patients.length,
-    activeSessions: patients.filter(p => p.practices.length > 0).length,
-    averageMood: 7.2
-  };
-
-  const handleAddPractice = (e) => {
+  const handleAddPractice = async (e) => {
     e.preventDefault();
-    if (newPractice.trim()) {
-      setTherapeuticPractices([...therapeuticPractices, newPractice.trim()]);
-      setNewPractice("");
+    if (newPractice.name?.trim() && onAddPractice) {
+      await onAddPractice({
+        name: newPractice.name.trim(),
+        description: newPractice.description?.trim() || null
+      });
+      setNewPractice({ name: "", description: "" });
+      setShowAddPractice(false);
+    } else if (newPractice.name?.trim()) {
       setShowAddPractice(false);
     }
+  };
+
+  const handleSavePatient = (e) => {
+    e.preventDefault();
+    // TODO: integrar com api.updatePatient quando implementado
+    setEditingPatient(null);
   };
 
   return (
@@ -84,7 +69,7 @@ const PsychologistDashboard = ({ onLogout, onNavigate }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total de Pacientes</p>
-                <p className="text-2xl font-bold text-gray-800">{dashboardData.totalPatients}</p>
+                <p className="text-2xl font-bold text-gray-800">{dashboardData.totalPatients ?? 0}</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -98,7 +83,7 @@ const PsychologistDashboard = ({ onLogout, onNavigate }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Sessões Ativas</p>
-                <p className="text-2xl font-bold text-gray-800">{dashboardData.activeSessions}</p>
+                <p className="text-2xl font-bold text-gray-800">{dashboardData.activeSessions ?? 0}</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -112,7 +97,7 @@ const PsychologistDashboard = ({ onLogout, onNavigate }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Práticas Terapêuticas</p>
-                <p className="text-2xl font-bold text-gray-800">{therapeuticPractices.length}</p>
+                <p className="text-2xl font-bold text-gray-800">{displayPractices.length}</p>
               </div>
               <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -135,7 +120,7 @@ const PsychologistDashboard = ({ onLogout, onNavigate }) => {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                <span>Prática</span>
+                <span>Nova Prática</span>
               </button>
               <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-1">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,7 +130,7 @@ const PsychologistDashboard = ({ onLogout, onNavigate }) => {
               </button>
             </div>
           </div>
-          
+
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
@@ -158,26 +143,33 @@ const PsychologistDashboard = ({ onLogout, onNavigate }) => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {patients.map((patient) => (
-                  <tr key={patient.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">{patient.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{patient.cpf}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{patient.contract}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div className="flex flex-wrap gap-1">
-                        {patient.practices.map((practice, index) => (
-                          <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                            {practice}
-                          </span>
-                        ))}
-                      </div>
+                {patients.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                      Nenhum paciente cadastrado
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end space-x-2">
+                  </tr>
+                ) : (
+                  patients.map((patient) => (
+                    <tr key={patient.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">{patient.name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{patient.cpf || '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{patient.contract || '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div className="flex flex-wrap gap-1">
+                          {(patient.practices || []).map((practice, index) => (
+                            <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                              {typeof practice === 'string' ? practice : practice?.name || practice}
+                            </span>
+                          ))}
+                          {(!patient.practices || patient.practices.length === 0) && '-'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
                           onClick={() => {
                             setEditingPatient(patient);
-                            setEditedPatient({...patient});
+                            setEditedPatient({ ...patient });
                           }}
                           className="text-blue-600 hover:text-blue-800"
                         >
@@ -185,15 +177,10 @@ const PsychologistDashboard = ({ onLogout, onNavigate }) => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                           </svg>
                         </button>
-                        <button className="text-red-600 hover:text-red-800">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -214,25 +201,22 @@ const PsychologistDashboard = ({ onLogout, onNavigate }) => {
             </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {therapeuticPractices.map((practice, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                <div className="flex items-center justify-between">
+            {displayPractices.length === 0 ? (
+              <p className="text-gray-500">Nenhuma prática cadastrada. Clique em Adicionar para criar.</p>
+            ) : (
+              displayPractices.map((practiceName, index) => (
+                <div key={index} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
                   <div className="flex items-center">
                     <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                       <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                       </svg>
                     </div>
-                    <span className="font-medium text-gray-800">{practice}</span>
+                    <span className="font-medium text-gray-800">{practiceName}</span>
                   </div>
-                  <button className="text-blue-600 hover:text-blue-800">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                  </button>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -258,13 +242,23 @@ const PsychologistDashboard = ({ onLogout, onNavigate }) => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Nome da Prática</label>
                     <input
                       type="text"
-                      value={newPractice}
-                      onChange={(e) => setNewPractice(e.target.value)}
+                      value={newPractice.name}
+                      onChange={(e) => setNewPractice({ ...newPractice, name: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Digite o nome da prática"
+                      required
                     />
                   </div>
-
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Descrição (opcional)</label>
+                    <textarea
+                      value={newPractice.description}
+                      onChange={(e) => setNewPractice({ ...newPractice, description: e.target.value })}
+                      rows={2}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Descrição da prática"
+                    />
+                  </div>
                   <div className="flex space-x-3 pt-4">
                     <button
                       type="button"
@@ -302,46 +296,35 @@ const PsychologistDashboard = ({ onLogout, onNavigate }) => {
                 </button>
               </div>
 
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                setPatients(patients.map(p => 
-                  p.id === editingPatient.id 
-                    ? { ...p, name: editedPatient.name || p.name, cpf: editedPatient.cpf || p.cpf, contract: editedPatient.contract || p.contract }
-                    : p
-                ));
-                setEditingPatient(null);
-              }}>
+              <form onSubmit={handleSavePatient}>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
                     <input
                       type="text"
                       defaultValue={editingPatient?.name}
-                      onChange={(e) => setEditedPatient({...editedPatient, name: e.target.value})}
+                      onChange={(e) => setEditedPatient({ ...editedPatient, name: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
-
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">CPF</label>
                     <input
                       type="text"
                       defaultValue={editingPatient?.cpf}
-                      onChange={(e) => setEditedPatient({...editedPatient, cpf: e.target.value})}
+                      onChange={(e) => setEditedPatient({ ...editedPatient, cpf: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
-
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Contrato</label>
                     <input
                       type="text"
                       defaultValue={editingPatient?.contract}
-                      onChange={(e) => setEditedPatient({...editedPatient, contract: e.target.value})}
+                      onChange={(e) => setEditedPatient({ ...editedPatient, contract: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
-
                   <div className="flex space-x-3 pt-4">
                     <button
                       type="button"

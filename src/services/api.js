@@ -30,28 +30,67 @@ export const api = {
     // Total de pacientes
     const { count: totalPatients } = await supabase
       .from('patients')
-      .select('*', { count: 'exact' })
+      .select('*', { count: 'exact', head: true })
       .eq('psychologist_id', psychologistId);
 
-    // Sessões ativas (pacientes com práticas)
-    const { count: activeSessions } = await supabase
-      .from('patient_practices')
-      .select('*', { count: 'exact' })
-      .eq('patient_id', psychologistId);
+    // IDs dos pacientes deste psicólogo
+    const { data: patientsData } = await supabase
+      .from('patients')
+      .select('id')
+      .eq('psychologist_id', psychologistId);
+    const patientIds = patientsData?.map(p => p.id) || [];
+
+    // Sessões ativas (pacientes com ao menos uma prática)
+    let activeSessions = 0;
+    if (patientIds.length > 0) {
+      const { data: practicesData } = await supabase
+        .from('patient_practices')
+        .select('patient_id')
+        .in('patient_id', patientIds);
+      const uniquePatients = new Set(practicesData?.map(p => p.patient_id) || []);
+      activeSessions = uniquePatients.size;
+    }
+
+    // Humor médio dos registros dos pacientes
+    let averageMood = 0;
+    if (patientIds.length > 0) {
+      const moodMap = { excelente: 5, bom: 4, neutro: 3, ruim: 2, péssimo: 1 };
+      const { data: entries } = await supabase
+        .from('daily_entries')
+        .select('mood')
+        .in('patient_id', patientIds);
+      if (entries && entries.length > 0) {
+        const sum = entries.reduce((acc, e) => acc + (moodMap[e.mood] || 0), 0);
+        averageMood = Math.round((sum / entries.length) * 10) / 10; // 1 casa decimal
+      }
+    }
 
     return {
       totalPatients: totalPatients || 0,
-      activeSessions: activeSessions || 0,
-      averageMood: 7.2 // Mock - você pode calcular isso com dados reais
+      activeSessions,
+      averageMood: averageMood || 0
     };
   },
 
   getPsychologistPatients: async (psychologistId) => {
     const { data, error } = await supabase
       .from('patients')
-      .select('*')
+      .select(`
+        *,
+        patient_practices(
+          therapeutic_practices(name)
+        )
+      `)
       .eq('psychologist_id', psychologistId);
     
+    if (data && !error) {
+      data.forEach(p => {
+        p.practices = (p.patient_practices || [])
+          .map(pp => pp.therapeutic_practices?.name)
+          .filter(Boolean);
+        delete p.patient_practices;
+      });
+    }
     return { data, error };
   },
 
@@ -60,15 +99,14 @@ export const api = {
     const { data, error } = await supabase
       .from('patient_practices')
       .select(`
-        practice_id,
         therapeutic_practices(name)
       `)
       .eq('patient_id', patientId);
     
-    return { 
-      data: data ? data.map(item => item.therapeutic_practices.name) : [], 
-      error 
-    };
+    const names = (data || [])
+      .map(item => item.therapeutic_practices?.name)
+      .filter(Boolean);
+    return { data: names, error };
   },
 
   getTherapeuticPractices: async () => {

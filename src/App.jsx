@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import toast from 'react-hot-toast';
 import { useAuth } from './hooks/useAuth';
 import { api } from "./services/api";
 import SignupScreen from './components/SignupScreen';
@@ -46,8 +47,6 @@ const App = () => {
 
   // Carregar dados do Supabase quando usuário logar
   useEffect(() => {
-    console.log('Supabase URL:', process.env.REACT_APP_SUPABASE_URL);
-    console.log('Supabase Key:', process.env.REACT_APP_SUPABASE_ANON_KEY);
     const loadData = async () => {
       if (user && userType === "psychologist") {
         try {
@@ -112,6 +111,13 @@ const App = () => {
           dashboardData={dashboardData}
           onPatientsList={setPatientsList}
           onTherapeuticPractices={setTherapeuticPractices}
+          onAddPractice={async (practiceData) => {
+            const { error } = await api.addTherapeuticPractice(practiceData);
+            if (!error) {
+              const { data } = await api.getTherapeuticPractices();
+              if (data) setTherapeuticPractices(data);
+            }
+          }}
         />
       );
     } else {
@@ -151,28 +157,56 @@ const App = () => {
 
   // Se não estiver autenticado, mostra telas de cadastro/login
   const handleSignup = async (signupData) => {
+    const tipo = signupData.userType === 'psychologist' ? 'psicólogo' : 'paciente';
+    const loadingToast = toast.loading(`Enviando dados ao banco (${tipo})...`);
+    
     try {
+      const userData = {
+        name: signupData.name,
+        email: signupData.email,
+        ...(signupData.userType === "psychologist" 
+          ? { crp: signupData.crp }
+          : { cpf: signupData.cpf }
+        )
+      };
+      
       const result = await signUp(
         signupData.email,
         signupData.password,
-        {
-          name: signupData.name,
-          email: signupData.email,
-          ...(signupData.userType === "psychologist" 
-            ? { crp: signupData.crp }
-            : { cpf: signupData.cpf }
-          )
-        },
+        userData,
         signupData.userType
       );
       
+      toast.dismiss(loadingToast);
+      
+      if (result?.error) {
+        const err = result.error;
+        let msg = err?.message || 'Erro desconhecido';
+        
+        // Mensagens amigáveis para erros comuns
+        if (err?.status === 429 || msg.toLowerCase().includes('rate limit') || msg.toLowerCase().includes('too many')) {
+          msg = 'Limite de tentativas excedido (plano gratuito: 2 cadastros/hora). Aguarde 1 hora ou use outro email.';
+        } else if (err?.status === 400 || msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('user already')) {
+          msg = 'Email já cadastrado ou dados inválidos. Verifique e tente outro email.';
+        } else if (msg.toLowerCase().includes('password') && msg.toLowerCase().includes('least')) {
+          msg = 'Senha muito curta. Use pelo menos 6 caracteres.';
+        }
+        
+        toast.error(`Falha no cadastro: ${msg}`);
+        return;
+      }
+      
       if (result?.data?.user) {
+        toast.success('Cadastro realizado! Dados salvos no banco. Redirecionando...');
         setUserType(signupData.userType);
         setCurrentView("login");
+      } else {
+        toast.error('Resposta inesperada do servidor. Tente novamente.');
       }
     } catch (error) {
+      toast.dismiss(loadingToast);
       console.error("Erro no cadastro:", error);
-      alert("Erro ao realizar cadastro. Tente novamente.");
+      toast.error(`Erro: ${error?.message || 'Tente novamente.'}`);
     }
   };
 
@@ -214,6 +248,7 @@ const App = () => {
         <PatientLogin 
           onLogin={handlePatientLogin}
           onBack={() => setCurrentView("login")}
+          onNavigateToRegistration={() => setCurrentView("patientRegistration")}
         />
       );
     

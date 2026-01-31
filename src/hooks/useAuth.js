@@ -40,18 +40,16 @@ export const useAuth = () => {
       password
     });
     
-    if (data.user && !error) {
+    if (data?.user && !error) {
       // Salvar dados adicionais baseado no tipo de usuário
-      if (userType === 'psychologist') {
-        await supabase.from('psychologists').insert([{
-          id: data.user.id,
-          ...userData
-        }]);
-      } else if (userType === 'patient') {
-        await supabase.from('patients').insert([{
-          id: data.user.id,
-          ...userData
-        }]);
+      const table = userType === 'psychologist' ? 'psychologists' : 'patients';
+      const { error: insertError } = await supabase.from(table).insert([{
+        id: data.user.id,
+        ...userData
+      }]);
+      
+      if (insertError) {
+        return { data: null, error: { message: `Auth OK, mas falha ao salvar no banco: ${insertError.message}` } };
       }
     }
     
