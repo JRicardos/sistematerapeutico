@@ -16,10 +16,6 @@ const App = () => {
   const { user, loading, signIn, signUp, signOut } = useAuth();
   const [currentView, setCurrentView] = useState("signup"); // Começa com signup
   const [userType, setUserType] = useState(null);
-  const [loginData, setLoginData] = useState({ 
-    email: "", 
-    password: ""
-  });
   const [patientData, setPatientData] = useState({
     name: "",
     cpf: "",
@@ -33,17 +29,11 @@ const App = () => {
   });
   const [therapeuticPractices, setTherapeuticPractices] = useState([]);
   const [patientsList, setPatientsList] = useState([]);
-  const [selectedPatient, setSelectedPatient] = useState(null);
   const [dashboardData, setDashboardData] = useState({
     totalPatients: 0,
     activeSessions: 0,
     averageMood: 0,
   });
-  const [showAddPractice, setShowAddPractice] = useState(false);
-  const [newPractice, setNewPractice] = useState("");
-  const [editingPatient, setEditingPatient] = useState(null);
-  const [editedPatient, setEditedPatient] = useState({});
-  const [registrationStep, setRegistrationStep] = useState(1);
 
   // Carregar dados do Supabase quando usuário logar
   useEffect(() => {

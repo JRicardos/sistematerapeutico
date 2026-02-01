@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 const PatientDashboard = ({ onNavigate, onLogout, practices = [] }) => {
-  const [selectedPractice, setSelectedPractice] = useState("");
   const therapeuticPractices = Array.isArray(practices) && practices.length > 0 ? practices : [];
   const hasPractices = therapeuticPractices.length > 0;
 
@@ -73,9 +72,8 @@ const PatientDashboard = ({ onNavigate, onLogout, practices = [] }) => {
             <div className="space-y-3">
               {hasPractices ? (
                 therapeuticPractices.map((practice, index) => (
-                  <button
+                  <div
                     key={index}
-                    onClick={() => setSelectedPractice(practice)}
                     className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
                   >
                     <div className="flex items-center justify-between">
@@ -84,7 +82,7 @@ const PatientDashboard = ({ onNavigate, onLogout, practices = [] }) => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
                     </div>
-                  </button>
+                  </div>
                 ))
               ) : (
                 <p className="text-gray-500 py-4 text-center">
