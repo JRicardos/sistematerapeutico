@@ -158,17 +158,23 @@ Configure no [Supabase](https://supabase.com) as tabelas necessárias. Veja [Mod
 
 ---
 
-## Deploy
+## Deploy (Vercel)
 
 O projeto está configurado para [Vercel](https://vercel.com):
 
-- `vercel.json` define rewrites para SPA
-- Configure `REACT_APP_SUPABASE_URL` e `REACT_APP_SUPABASE_ANON_KEY` nas variáveis de ambiente do projeto na Vercel
+1. Conecte o repositório em [vercel.com/new](https://vercel.com/new)
+2. Configure as variáveis de ambiente:
+   - `REACT_APP_SUPABASE_URL`
+   - `REACT_APP_SUPABASE_ANON_KEY`
+3. Deploy automático a cada push em `main`
+
+📖 Guia completo: [docs/DEPLOY-VERCEL.md](docs/DEPLOY-VERCEL.md)
 
 ---
 
 ## Documentação Adicional
 
+- [Deploy na Vercel](docs/DEPLOY-VERCEL.md)
 - [Configuração do Supabase](docs/SUPABASE-SETUP.md)
 - [Sugestões de melhoria e roadmap](docs/MELHORIAS.md)
 

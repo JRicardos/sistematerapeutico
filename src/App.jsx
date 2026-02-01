@@ -22,11 +22,6 @@ const App = () => {
     psychologistId: "",
     phone: "",
   });
-  const [dailyEntry, setDailyEntry] = useState({
-    mood: "",
-    date: new Date().toISOString().split("T")[0],
-    description: "",
-  });
   const [therapeuticPractices, setTherapeuticPractices] = useState([]);
   const [patientsList, setPatientsList] = useState([]);
   const [dashboardData, setDashboardData] = useState({
